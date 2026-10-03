@@ -26,11 +26,6 @@ int main(int argc, char** argv){
     }
     loaded_image->height = height;
     loaded_image->width = width;
-    if (loaded_image->pixels == NULL) {
-        free(loaded_image);
-        printf("failed to allocate loaded_image->pixels");
-        return 1; // failed allocation
-    }
 
     // TODO: call correct function based on mode
     if (strcmp(mode, "kernel") == 0) {
