@@ -33,6 +33,51 @@ struct pixel add(struct pixel p1, struct pixel p2) {
  *
  */
 struct image* apply_kernel(struct image* img, int* kernel, int ksize, float normalize) {
+    int height = img->height;
+    int width = img->width;
 
+    // calloc output
+    struct image* output = calloc(1, sizeof(struct image));
+    if (output == NULL) {
+        printf("failed to allocate output in apply_kernel");
+        return NULL; // failed allocation
+    }
+    output->height = height;
+    output->width = width;
+    output->pixels = calloc(1, width * height * sizeof(struct pixel));
+    if (output->pixels == NULL) {
+        printf("failed to allocate output->pixels in apply_kernel");
+        free(output);
+        return NULL; // failed allocation
+    }
+
+    int kr = ksize / 2; // reach around origin
+
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            struct pixel p = {0, 0, 0};
+
+            for (int krow = 0; krow < ksize; krow++) { // on the kernel
+                for (int kcol = 0; kcol < ksize; kcol++) {
+                    int curw = w + kcol - kr;   // on image on this kernel
+                    int curh = h + krow - kr;
+
+                    struct pixel addp = {0, 0, 0}; // black pixel for off image pixel
+                    if (curw >= 0 && curw < width && curh >= 0 && curh < height)
+                        addp = img->pixels[curh * width + curw];
+
+                    p = add(p, mul(addp, (float)kernel[krow * ksize + kcol]));
+                }
+            }
+
+            p = mul(p, normalize);
+            int r = (p.r < 0) ? 0 : (p.r > 255) ? 255 : p.r;
+            int g = (p.g < 0) ? 0 : (p.g > 255) ? 255 : p.g;
+            int b = (p.b < 0) ? 0 : (p.b > 255) ? 255 : p.b;
+            output->pixels[h * width + w] = (struct pixel){r, g, b};
+        }
+    }
+
+    return output;
 }
 
