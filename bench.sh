@@ -15,7 +15,7 @@ mkdir testout
 
 for i in $(eval echo {1..${1}})
 do
-    ./cli kernel images/4096x4096.bmp 4096 4096 testout/out-${i}.bin&
+    ./cli kernel images/2048x2048.bmp 2048 2048 testout/out-${i}.bin&
     pids[${i}]=$!
     echo $(date)
 done
