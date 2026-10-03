@@ -1,2 +1,2 @@
-(1)
-(2)
+(1) Note: I'm using up to size 2048 image for my machine. My program exclusively uses 97,316,864 B (95,036 KB × 1024).
+(2) Similarly, with 5 processes, each process still uses exclusively around the same amount of memory, the highest being 97546240 B (95,260 KB × 1024).
