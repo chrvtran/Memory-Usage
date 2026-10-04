@@ -3,7 +3,26 @@
 #include <sys/mman.h>
 
 int generate_pagefault() {
+    // making a valid image
+    struct image* image = calloc(1, sizeof(struct image));
+    if (image == NULL) {
+        return -1;
+    }
+    image->height = 16;
+    image->width = 16;
+    image->pixels = calloc(1, sizeof(struct pixel) * 16 * 16);
+    if (image->pixels == NULL) {
+        free(image);
+        return -1;
+    }
 
+    // the key, not on physical mem
+    saveimage_mmap("yolo.bmp", image);
+
+    free(image->pixels);
+    free(image);
+
+    return 0;
 }
 
 int main(int argc, char** argv){
@@ -18,6 +37,10 @@ int main(int argc, char** argv){
     int width = atoi(argv[3]);
     int height = atoi(argv[4]);
     char* out_path = argv[5]; // image output filepath
+
+    if (strcmp(mode, "fault") == 0) {
+        return generate_pagefault();
+    }
 
     // checking base cases
     if (width <= 0 || height <= 0) return -1;
