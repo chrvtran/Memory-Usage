@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "converting input to binary format..."
-./cli convert images/4096x4096.bmp 2048 2048 images/2048x2048.bin
+./cli convert images/2048x2048.bmp 2048 2048 images/2048x2048.bin
 
 
 rm -rf ps.log

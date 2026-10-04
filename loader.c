@@ -1,7 +1,8 @@
 #include "loader.h"
 #include <sys/mman.h>
 #include <errno.h>
-
+#include <sys/stat.h>
+#include <string.h>
 
 /*
  * Loads an image from a raw image file using memory-mapped I/O.
@@ -27,6 +28,29 @@
  * Returns 0 on success, or -1 if the file cannot be opened or mapped.
  */
 int loadimage_mmap(char* filename, struct image* image) {
+	int fd = open(filename, O_RDONLY);
+    if (fd == -1) return -1;
+	int width = image->width;
+	int height = image->height;
+	size_t length = sizeof(struct image) + sizeof(struct pixel) * width * height;
+
+	// load edge case
+    struct stat st;
+    if (fstat(fd, &st) == -1 || (size_t)st.st_size < length) {
+        close(fd);
+		printf("no stats or the file image is smaller than expected");
+        return -1;
+    }
+
+	// mapping
+	void* map = mmap(NULL, length, PROT_READ, MAP_SHARED, fd, 0);
+	if (map == MAP_FAILED) return -1;
+	
+	// successful copy then
+	memcpy(image, map, sizeof(struct image));
+	image->pixels = (struct pixel*)((char*)map + sizeof(struct image)); // cast from void to arithemetic to pixel
+
+	close(fd);
 	return 0;
 }
 
@@ -47,6 +71,37 @@ int loadimage_mmap(char* filename, struct image* image) {
  * A failed flush to disk is reported but still returns 0.
  */
 int saveimage_mmap(char* filename, struct image* image) {
+	int fd = open(filename, O_RDWR | O_CREAT | O_TRUNC,
+		      S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH); // WRONLY -> RDWR
+	if (fd == -1) return -1;
+	int width = image->width;
+	int height = image->height;
+
+	size_t pixel_bytes = sizeof(struct pixel) * width * height;
+    size_t length = sizeof(struct image) + pixel_bytes;
+
+	// truncating
+    if (ftruncate(fd, length) == -1) {
+        close(fd);
+        return -1;
+    }
+
+	// mapping
+	void* map = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (map == MAP_FAILED) return -1;
+
+	// successful copy
+	memcpy(map, image, sizeof(struct image));
+    memcpy((char*)map + sizeof(struct image), image->pixels, pixel_bytes); 
+
+	// synchronous flush
+	if (msync(map, length, MS_SYNC) == -1) {
+		// failed flush report
+		perror("msync");
+	}
+
+	munmap(map, length);
+	close(fd);
 	return 0;
 }
 

@@ -44,7 +44,7 @@ struct image* apply_kernel(struct image* img, int* kernel, int ksize, float norm
     }
     output->height = height;
     output->width = width;
-    output->pixels = calloc(1, width * height * sizeof(struct pixel));
+    output->pixels = calloc(1, sizeof(struct pixel) * width * height);
     if (output->pixels == NULL) {
         printf("failed to allocate output->pixels in apply_kernel");
         free(output);
